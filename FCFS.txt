@@ -1,0 +1,67 @@
+
+#include <stdio.h>
+
+typedef struct {
+    int Pid, AT, BT, CT, TAT, WT, RT;
+} Process;
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    Process Pro[n];
+    int currentTime = 0;
+    int i, j;
+
+    printf("\nFIRST COME FIRST SERVE\n");
+
+    // Input process details
+    for (i = 0; i < n; i++) {
+        printf("\nEnter the process id: ");
+        scanf("%d", &Pro[i].Pid);
+        printf("Enter the process arrival time: ");
+        scanf("%d", &Pro[i].AT);
+        printf("Enter the process Burst time: ");
+        scanf("%d", &Pro[i].BT);
+    }
+
+    // Sorting the array according to the arrival time of the process
+    Process temp;
+    for (i = 0; i < n - 1; i++) {
+        for (j = i + 1; j < n; j++) {
+            if (Pro[i].AT > Pro[j].AT) {
+                temp = Pro[i];
+                Pro[i] = Pro[j];
+                Pro[j] = temp;
+            }
+        }
+    }
+
+    // Calculating completion time, TAT, WT, and RT
+    for (i = 0; i < n; i++) {
+        if (currentTime < Pro[i].AT) {
+            currentTime = Pro[i].AT; // Wait for the process to arrive
+        }
+
+        Pro[i].CT = currentTime + Pro[i].BT;
+        Pro[i].TAT = Pro[i].CT - Pro[i].AT;
+        Pro[i].WT = Pro[i].TAT - Pro[i].BT;
+        Pro[i].RT = Pro[i].WT;
+
+        currentTime = Pro[i].CT; // Update current time
+    }
+
+    // Output results
+    printf("\nProcess execution details: \n");
+    for (i = 0; i < n; i++) {
+        printf("\nProcess id: %d", Pro[i].Pid);
+        printf("\n\tArrival Time: %d", Pro[i].AT);
+        printf("\n\tBurst Time: %d", Pro[i].BT);
+        printf("\n\tTurn around time: %d", Pro[i].TAT);
+        printf("\n\tCompletion time: %d", Pro[i].CT);
+        printf("\n\tWaiting time: %d", Pro[i].WT);
+        printf("\n\tResponse time: %d\n", Pro[i].RT);
+    }
+
+    return 0;
+}
