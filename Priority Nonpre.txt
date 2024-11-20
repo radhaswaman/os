@@ -1,0 +1,78 @@
+#include <stdio.h>
+
+struct Process {
+    int id;
+    int burst_time;
+    int priority;
+    int waiting_time;
+    int turnaround_time;
+};
+
+void findWaitingTime(struct Process proc[], int n) {
+    proc[0].waiting_time = 0;
+
+    // Calculate waiting time for each process
+    for (int i = 1; i < n; i++) {
+        proc[i].waiting_time = proc[i - 1].waiting_time + proc[i - 1].burst_time;
+    }
+}
+
+void findTurnaroundTime(struct Process proc[], int n) {
+    // Calculate turnaround time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].turnaround_time = proc[i].burst_time + proc[i].waiting_time;
+    }
+}
+
+void sortByPriority(struct Process proc[], int n) {
+    // Sorting processes based on priority using simple bubble sort
+    struct Process temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (proc[j].priority > proc[j + 1].priority) {
+                temp = proc[j];
+                proc[j] = proc[j + 1];
+                proc[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void printProcesses(struct Process proc[], int n) {
+    printf("Process\tBurst Time\tPriority\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\n", proc[i].id, proc[i].burst_time, proc[i].priority,
+                proc[i].waiting_time, proc[i].turnaround_time);
+    }
+}
+
+int main() {
+    int n;
+
+    // Input number of processes
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    struct Process proc[n];
+
+    // Input process details
+    for (int i = 0; i < n; i++) {
+        proc[i].id = i + 1;  // Assign process ID
+        printf("Enter burst time for process %d: ", i + 1);
+        scanf("%d", &proc[i].burst_time);
+        printf("Enter priority for process %d: ", i + 1);
+        scanf("%d", &proc[i].priority);
+    }
+
+    // Sort processes by priority
+    sortByPriority(proc, n);
+
+    // Calculate waiting and turnaround times
+    findWaitingTime(proc, n);
+    findTurnaroundTime(proc, n);
+
+    // Print process details
+    printProcesses(proc, n);
+
+    return 0;
+}
