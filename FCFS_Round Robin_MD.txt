@@ -1,0 +1,101 @@
+#include <stdio.h>
+
+typedef struct {
+    int pid, at, bt, tat, wt, originalBT, ct, rt;
+} Process;
+
+void FCFS(Process p[], int n) {
+    int currentTime = 0;
+    for (int i = 0; i < n; i++) {
+        if (currentTime < p[i].at) {
+            currentTime = p[i].at; // Wait for the process to arrive
+        }
+        p[i].ct = currentTime + p[i].bt;
+        p[i].tat = p[i].ct - p[i].at;
+        p[i].wt = p[i].tat - p[i].bt;
+        p[i].rt = p[i].wt;
+        currentTime = p[i].ct; // Update current time
+    }
+
+    // Display results
+    printf("\nFCFS Results:\n");
+    printf("PID\tAT\tBT\tCT\tTAT\tWT\tRT\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p[i].pid, p[i].at, p[i].originalBT, p[i].ct, p[i].tat, p[i].wt, p[i].rt);
+    }
+}
+
+void RoundRobin(Process p[], int n, int tq) {
+    int currentTime = 0;
+    int completedProcesses = 0;
+    int queueEmpty = 1;
+    int i = 0;
+
+    while (completedProcesses < n) {
+        queueEmpty = 1;
+        for (int j = 0; j < n; j++) {
+            if (p[j].bt > 0 && p[j].at <= currentTime) {
+                queueEmpty = 0;
+                if (p[j].bt > tq) {
+                    p[j].bt -= tq;
+                    currentTime += tq;
+                } else {
+                    currentTime += p[j].bt;
+                    p[j].bt = 0;
+                    completedProcesses++;
+                    p[j].ct = currentTime;
+                    p[j].tat = p[j].ct - p[j].at;
+                    p[j].wt = p[j].tat - p[j].originalBT;
+                }
+            }
+        }
+        if (queueEmpty) {
+            currentTime++;
+        }
+    }
+
+    // Display results
+    printf("\nRound Robin Results:\n");
+    printf("PID\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\n", p[i].pid, p[i].at, p[i].originalBT, p[i].ct, p[i].tat, p[i].wt);
+    }
+}
+
+int main() {
+    int n, tq, choice;
+
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    Process p[n];
+    for (int i = 0; i < n; i++) {
+        printf("Enter process ID: ");
+        scanf("%d", &p[i].pid);
+        printf("Enter arrival time: ");
+        scanf("%d", &p[i].at);
+        printf("Enter burst time: ");
+        scanf("%d", &p[i].bt);
+        p[i].originalBT = p[i].bt;
+        p[i].tat = p[i].wt = p[i].ct = p[i].rt = 0; // Initialize fields
+        printf("\n");
+    }
+
+    printf("Choose Scheduling Algorithm:\n");
+    printf("1. First Come First Serve (FCFS)\n");
+    printf("2. Round Robin (RR)\n");
+    printf("Enter choice (1 or 2): ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        FCFS(p, n);
+    } else if (choice == 2) {
+        printf("Enter time quantum for Round Robin: ");
+        scanf("%d", &tq);
+        RoundRobin(p, n, tq);
+    } else {
+        printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
