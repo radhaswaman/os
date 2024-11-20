@@ -1,0 +1,144 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+typedef struct 
+{
+    int Pid;            // Process ID
+    int allocation[3];  // Allocated resources for the process (n x m)
+    int max[3];         // Maximum resources the process may need (n x m)
+    int need[3];        // Remaining resources the process needs (n x m)
+} Process;
+
+int main() 
+{
+    int n, m = 3;  // 'n' is the number of processes, 'm' is the number of resource types
+    int i, j;
+
+    printf("\n- ****************BANKER'S ALGORITHM\n");
+    
+    // Input the number of processes
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    Process Pro[n];      // Array of processes, dynamically sized based on user input
+    int available[m];    // Available resources array
+    int total[m];        // Total resources array
+    int safeSeq[n];      // Safe sequence of processes
+    bool finished[n];    // Process completion flag
+
+    // Initializing the finished array to false 
+    for (i = 0; i < n; i++) 
+    {
+        finished[i] = false;
+    }
+
+    // total resources for each resource type
+    printf("Enter total resources (3 types): ");
+    for (i = 0; i < m; i++) 
+    {
+        scanf("%d", &total[i]);
+    }
+
+    // Input available resources
+    printf("Enter available resources (3 types): ");
+    for (i = 0; i < m; i++) 
+    {
+        scanf("%d", &available[i]);
+    }
+
+    // Input process details
+    for (i = 0; i < n; i++) 
+    {
+        Pro[i].Pid = i + 1;  // Assign process IDs as 1, 2, 3, etc.
+        printf("\nEnter allocation for Process %d (3 types): ", Pro[i].Pid);
+        for (j = 0; j < m; j++) 
+        {
+            scanf("%d", &Pro[i].allocation[j]);
+        }
+        printf("Enter maximum need for Process %d (3 types): ", Pro[i].Pid);
+        for (j = 0; j < m; j++) 
+        {
+            scanf("%d", &Pro[i].max[j]);
+            Pro[i].need[j] = Pro[i].max[j] - Pro[i].allocation[j];  // Calculate need
+            if (Pro[i].need[j] < 0) {
+                printf("Error: Need cannot be negative. Please check the input.\n");
+                return 0;
+            }
+        }
+    }
+
+    int count = 0;  // Count of processes added to safe sequence
+
+    // Check if the system is in a valid state initially
+    for (j = 0; j < m; j++) {
+        int allocated = 0;
+        for (i = 0; i < n; i++) {
+            allocated += Pro[i].allocation[j];
+        }
+        if (allocated + available[j] > total[j]) {
+            printf("Error: Total allocated resources exceed system capacity. Invalid input.\n");
+            return 0;
+        }
+    }
+
+    // Banker's Algorithm
+    while (count < n) 
+    {
+        bool found = false;
+
+        for (i = 0; i < n; i++) 
+        {
+            if (!finished[i]) 
+            {  // If the process hasn't finished yet
+                bool canAllocate = true;
+
+                // Check if need[i] <= available for all resource types
+                for (j = 0; j < m; j++) 
+                {
+                    if (Pro[i].need[j] > available[j]) 
+                    {
+                        canAllocate = false;
+                        break;
+                    }
+                }
+
+                if (canAllocate) 
+                {
+                    // Allocate resources to the process
+                    for (j = 0; j < m; j++) 
+                    {
+                        available[j] += Pro[i].allocation[j];  // Free allocated resources
+                    }
+
+                    safeSeq[count++] = Pro[i].Pid;  // Add process to safe sequence
+                    finished[i] = true;             // Mark process as finished
+                    found = true;
+                }
+            }
+        }
+
+        // If no process was allocated in this round, no safe sequence is possible
+        if (!found) 
+        {
+            printf("System is in an unsafe state!\n");
+            return 0;
+        }
+    }
+
+    // Output Safe Sequence
+    printf("\nSystem is in a safe state.\nSafe sequence: ");
+    for (i = 0; i < n; i++) 
+    {
+        printf("P%d ", safeSeq[i]);
+    }
+    printf("\n");
+
+    // Output total resources
+    printf("\nTotal resources in the system:\n");
+    for (i = 0; i < m; i++) 
+    {
+        printf("Resource %d: %d\n", i + 1, total[i]);
+    }
+
+    return 0;
+}
