@@ -1,0 +1,584 @@
+FCFS
+
+#include <stdio.h>
+
+typedef struct {
+int Pid, AT, BT, CT, TAT, WT, RT;
+} Process;
+
+int main() {
+int n = 4; // Number of processes
+Process Pro[] = {
+{1, 0, 5, 0, 0, 0, 0}, // Process 1: AT=0, BT=5
+{2, 1, 3, 0, 0, 0, 0}, // Process 2: AT=1, BT=3
+{3, 2, 8, 0, 0, 0, 0}, // Process 3: AT=2, BT=8
+{4, 3, 6, 0, 0, 0, 0} // Process 4: AT=3, BT=6
+};
+
+int currentTime = 0;
+int i, j;
+
+printf("\nFIRST COME FIRST SERVE\n");
+
+// Sorting the array according to the arrival time of the process
+Process temp;
+for (i = 0; i < n - 1; i++) {
+for (j = i + 1; j < n; j++) {
+if (Pro[i].AT > Pro[j].AT) {
+temp = Pro[i];
+Pro[i] = Pro[j];
+Pro[j] = temp;
+}
+}
+}
+
+// Calculating completion time, TAT, WT, and RT
+for (i = 0; i < n; i++) {
+if (currentTime < Pro[i].AT) {
+currentTime = Pro[i].AT; // Wait for the process to arrive
+}
+
+Pro[i].CT = currentTime + Pro[i].BT;
+Pro[i].TAT = Pro[i].CT - Pro[i].AT;
+Pro[i].WT = Pro[i].TAT - Pro[i].BT;
+Pro[i].RT = Pro[i].WT;
+
+currentTime = Pro[i].CT; // Update current time
+}
+
+// Output results
+printf("\nProcess execution details: \n");
+for (i = 0; i < n; i++) {
+printf("\nProcess id: %d", Pro[i].Pid);
+printf("\n\tArrival Time: %d", Pro[i].AT);
+printf("\n\tBurst Time: %d", Pro[i].BT);
+printf("\n\tTurn around time: %d", Pro[i].TAT);
+printf("\n\tCompletion time: %d", Pro[i].CT);
+printf("\n\tWaiting time: %d", Pro[i].WT);
+printf("\n\tResponse time: %d\n", Pro[i].RT);
+}
+
+return 0;
+}
+
+
+
+ROUND ROBIN
+
+#include <stdio.h>
+
+typedef struct process {
+int pid, at, bt, tat, wt, originalBT, ct;
+} Process;
+
+int main() {
+int n = 4; // Number of processes
+int tq = 3; // Time quantum
+Process p[] = {
+{1, 0, 5, 0, 0, 5, 0}, // Process 1: AT=0, BT=5
+{2, 1, 3, 0, 0, 3, 0}, // Process 2: AT=1, BT=3
+{3, 2, 8, 0, 0, 8, 0}, // Process 3: AT=2, BT=8
+{4, 3, 6, 0, 0, 6, 0} // Process 4: AT=3, BT=6
+};
+
+int currentTime = 0;
+int completedProcesses = 0;
+int queueEmpty = 1;
+int i = 0;
+
+printf("\nROUND ROBIN SCHEDULING\n");
+printf("Time Quantum: %d\n\n", tq);
+
+while (completedProcesses < n) {
+queueEmpty = 1;
+for (int j = 0; j < n; j++) {
+if (p[j].bt > 0 && p[j].at <= currentTime) {
+queueEmpty = 0;
+if (p[j].bt > tq) {
+p[j].bt -= tq;
+currentTime += tq;
+} else {
+currentTime += p[j].bt;
+p[j].bt = 0;
+completedProcesses++;
+p[j].ct = currentTime;
+p[j].tat = p[j].ct - p[j].at;
+p[j].wt = p[j].tat - p[j].originalBT;
+}
+}
+}
+if (queueEmpty) {
+currentTime++;
+}
+}
+
+printf("\nProcess Execution Results:\n");
+printf("PID\tAT\tBT\tCT\tTAT\tWT\n");
+for (i = 0; i < n; i++) {
+printf("%d\t%d\t%d\t%d\t%d\t%d\n",
+p[i].pid, p[i].at, p[i].originalBT, p[i].ct, p[i].tat, p[i].wt);
+}
+
+return 0;
+}
+
+
+
+
+
+SJF
+
+#include <stdio.h>
+
+struct proc {
+int id; // Process ID
+int at; // Arrival Time
+int bt; // Burst Time
+int ct; // Completion Time
+int tat; // Turnaround Time
+int wt; // Waiting Time
+};
+
+void sort(struct proc p[], int n) {
+// Sorting processes based on burst time (bt) using bubble sort
+for (int i = 0; i < n - 1; i++) {
+for (int j = 0; j < n - i - 1; j++) {
+if (p[j].bt > p[j + 1].bt) {
+struct proc temp = p[j];
+p[j] = p[j + 1];
+p[j + 1] = temp;
+}
+}
+}
+}
+
+void calculateTimes(struct proc p[], int n) {
+float totalTAT = 0; // Total Turnaround Time
+float totalWT = 0; // Total Waiting Time
+
+p[0].ct = p[0].at + p[0].bt; // Completion time of the first process
+p[0].tat = p[0].ct - p[0].at; // Turnaround time = Completion time - Arrival time
+p[0].wt = p[0].tat - p[0].bt; // Waiting time = Turnaround time - Burst time
+
+totalTAT += p[0].tat;
+totalWT += p[0].wt;
+
+for (int i = 1; i < n; i++) {
+// Completion time is based on the previous process
+if (p[i].at > p[i - 1].ct) {
+p[i].ct = p[i].at + p[i].bt; // Idle time handling
+} else {
+p[i].ct = p[i - 1].ct + p[i].bt;
+}
+
+p[i].tat = p[i].ct - p[i].at; // Turnaround time
+p[i].wt = p[i].tat - p[i].bt; // Waiting time
+
+totalTAT += p[i].tat;
+totalWT += p[i].wt;
+}
+
+printf("\nProcess\tAT\tBT\tCT\tTAT\tWT\n");
+for (int i = 0; i < n; i++) {
+printf("%d\t%d\t%d\t%d\t%d\t%d\n",
+p[i].id, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+}
+
+printf("Average Turnaround Time: %.2f\n", totalTAT / n);
+printf("Average Waiting Time: %.2f\n", totalWT / n);
+}
+
+int main() {
+int n = 4; // Predefined number of processes
+struct proc p[] = {
+{1, 0, 6, 0, 0, 0}, // Process 1: AT=0, BT=6
+{2, 2, 8, 0, 0, 0}, // Process 2: AT=2, BT=8
+{3, 4, 7, 0, 0, 0}, // Process 3: AT=4, BT=7
+{4, 6, 3, 0, 0, 0} // Process 4: AT=6, BT=3
+};
+
+// Sort processes based on burst time
+sort(p, n);
+
+// Calculate completion, turnaround, and waiting times
+calculateTimes(p, n);
+
+return 0;
+}
+
+
+
+
+PRIORITY
+
+
+#include <stdio.h>
+
+#define MAX 10
+
+typedef struct {
+int pid, bt, priority, at, wt, tat, ct;
+} Process;
+
+int main() {
+Process p[MAX] = {
+{1, 10, 3, 0, 0, 0, 0}, // Process 1: BT=10, Priority=3, AT=0
+{2, 1, 1, 2, 0, 0, 0}, // Process 2: BT=1, Priority=1, AT=2
+{3, 2, 4, 1, 0, 0, 0}, // Process 3: BT=2, Priority=4, AT=1
+{4, 1, 2, 3, 0, 0, 0} // Process 4: BT=1, Priority=2, AT=3
+};
+int n = 4; // Number of predefined processes
+
+int completedCount = 0, time = 0;
+int completed[MAX] = {0};
+
+// Non-Preemptive Priority Scheduling Logic
+while (completedCount < n) {
+int highestPriority = -1;
+for (int i = 0; i < n; i++) {
+if (!completed[i] && p[i].at <= time &&
+(highestPriority == -1 || p[i].priority < p[highestPriority].priority)) {
+highestPriority = i;
+}
+}
+
+if (highestPriority == -1) {
+time++;
+continue;
+}
+
+time += p[highestPriority].bt;
+p[highestPriority].ct = time;
+completed[highestPriority] = 1;
+completedCount++;
+}
+
+// Calculate Waiting Time and Turnaround Time
+for (int i = 0; i < n; i++) {
+p[i].tat = p[i].ct - p[i].at;
+p[i].wt = p[i].tat - p[i].bt;
+}
+
+// Display Process Table
+printf("\nPID\tPriority\tAT\tBT\tCT\tWT\tTAT\n");
+for (int i = 0; i < n; i++) {
+printf("%d\t%d\t\t%d\t%d\t%d\t%d\t%d\n",
+p[i].pid, p[i].priority, p[i].at, p[i].bt,
+p[i].ct, p[i].wt, p[i].tat);
+}
+
+return 0;
+}
+
+
+
+
+FIFO
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void fifo(int ref[], int size, int n) {
+int frames[n];
+for (int i = 0; i < n; i++) {
+frames[i] = -1;
+}
+int pageMiss = 0;
+int pageHits = 0;
+int currentIndex = 0;
+
+for (int i = 0; i < size; i++) {
+int flag = 0;
+for (int j = 0; j < n; j++) {
+if (frames[j] == ref[i]) {
+flag = 1;
+break;
+}
+}
+
+if (flag == 1) {
+pageHits++;
+} else {
+frames[currentIndex] = ref[i];
+currentIndex = (currentIndex + 1) % n; // current index value to next index in FIFO % no of frames
+pageMiss++;
+}
+}
+
+printf("FIFO Page Faults: %d, Page Hits: %d\n", pageMiss, pageHits);
+}
+
+int main(void) {
+int frames = 3; // Predefined number of frames
+int size = 12; // Predefined size of the reference string
+int ref[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3}; // Predefined reference string
+
+printf("Number of frames: %d\n", frames);
+printf("Reference string: ");
+for (int i = 0; i < size; i++) {
+printf("%d ", ref[i]);
+}
+printf("\n");
+
+fifo(ref, size, frames);
+
+return 0;
+}
+
+
+
+
+
+
+LRU
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void lru(int ref[], int size, int n) {
+    int frames[n];
+    int time[n];
+
+    for (int i = 0; i < n; i++) {
+        frames[i] = -1;
+        time[i] = -1;
+    }
+
+    int pageMiss = 0;
+    int pageHits = 0;
+
+    for (int i = 0; i < size; i++) {
+        int currentPage = ref[i];
+        int flag = 0;
+
+        for (int j = 0; j < n; j++) {
+            if (frames[j] == currentPage) {
+                flag = 1;
+                time[j] = i;
+                pageHits++;
+                break;
+            }
+        }
+
+        if (flag == 0) {
+            int oldest = 0;
+            for (int j = 1; j < n; j++) {
+                if (time[j] < time[oldest]) {
+                    oldest = j;
+                }
+            }
+
+            frames[oldest] = currentPage;
+            time[oldest] = i;
+            pageMiss++;
+        }
+
+        printf("Frames after accessing page %d: ", currentPage);
+        for (int j = 0; j < n; j++) {
+            if (frames[j] != -1)
+                printf("%d ", frames[j]);
+            else
+                printf("- ");
+        }
+        printf("\n");
+    }
+
+    printf("LRU Page Faults: %d, Page Hits: %d\n", pageMiss, pageHits);
+}
+
+int main(void) {
+    int frames = 3; // Predefined number of frames
+    int size = 12; // Predefined size of the reference string
+    int ref[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3}; // Predefined reference string
+
+    printf("Number of frames: %d\n", frames);
+    printf("Reference string size: %d\n", size);
+    printf("Reference string: ");
+    for (int i = 0; i < size; i++) {
+        printf("%d ", ref[i]);
+    }
+    printf("\n");
+
+    lru(ref, size, frames);
+    return 0;
+}
+
+
+
+BANKERS DEADLOCK
+
+#include <stdio.h>
+#include <stdbool.h>
+
+// Number of processes and resources
+#define P 5
+#define R 3
+
+// Function to check if the system is in a safe state
+bool isSafe(int processes[], int available[], int max[P][R], int allocation[P][R]) {
+int work[R];
+bool finish[P] = {false};
+int safeSequence[P];
+int count = 0;
+
+// Initialize work array as available
+for (int i = 0; i < R; i++) {
+work[i] = available[i];
+}
+
+while (count < P) {
+bool found = false;
+for (int p = 0; p < P; p++) {
+if (!finish[p]) {
+int j;
+for (j = 0; j < R; j++) {
+if (max[p][j] - allocation[p][j] > work[j]) {
+break;
+}
+}
+if (j == R) {
+for (int k = 0; k < R; k++) {
+work[k] += allocation[p][k];
+}
+safeSequence[count++] = p;
+finish[p] = true;
+found = true;
+}
+}
+}
+if (!found) {
+printf("The system is not in a safe state.\n");
+return false;
+}
+}
+
+printf("The system is in a safe state. Safe sequence is:\n");
+for (int i = 0; i < P; i++) {
+printf("P%d ", safeSequence[i]);
+}
+printf("\n");
+
+return true;
+}
+
+int main() {
+int processes[P] = {0, 1, 2, 3, 4};
+
+// Available resources
+int available[R] = {0, 0, 0}; // Modified input to cause deadlock
+
+// Maximum resources for each process
+int max[P][R] = {
+{7, 5, 3},
+{3, 2, 2},
+{9, 0, 2},
+{2, 2, 2},
+{4, 3, 3}
+};
+
+// Allocated resources for each process
+int allocation[P][R] = {
+{0, 1, 0},
+{2, 0, 0},
+{3, 0, 2},
+{2, 1, 1},
+{0, 0, 2}
+};
+
+// Check system safety
+isSafe(processes, available, max, allocation);
+
+return 0;
+}
+
+
+BANKERS SAFESEQ
+
+#include <stdio.h>
+#include <stdbool.h>
+
+// Number of processes and resources
+#define P 5
+#define R 3
+
+// Function to check if the resources can be allocated
+bool isSafe(int processes[], int avail[], int max[][R], int allot[][R]) {
+int work[R];
+bool finish[P] = {false};
+
+// Copy the available resources to work[]
+for (int i = 0; i < R; i++) {
+work[i] = avail[i];
+}
+
+int safeSeq[P];
+int count = 0;
+
+while (count < P) {
+bool found = false;
+for (int p = 0; p < P; p++) {
+if (!finish[p]) {
+bool canAllocate = true;
+for (int j = 0; j < R; j++) {
+if (max[p][j] - allot[p][j] > work[j]) {
+canAllocate = false;
+break;
+}
+}
+
+if (canAllocate) {
+for (int k = 0; k < R; k++) {
+work[k] += allot[p][k];
+}
+safeSeq[count++] = p;
+finish[p] = true;
+found = true;
+}
+}
+}
+
+if (!found) {
+printf("The system is not in a safe state.\n");
+return false;
+}
+}
+
+printf("The system is in a safe state.\nSafe sequence is: ");
+for (int i = 0; i < P; i++) {
+printf("P%d ", safeSeq[i]);
+}
+printf("\n");
+return true;
+}
+
+int main() {
+int processes[P] = {0, 1, 2, 3, 4};
+
+// Available resources
+int avail[R] = {3, 3, 2};
+
+// Maximum resources that each process may need
+int max[P][R] = {
+{7, 5, 3},
+{3, 2, 2},
+{9, 0, 2},
+{2, 2, 2},
+{4, 3, 3}
+};
+
+// Resources currently allocated to each process
+int allot[P][R] = {
+{0, 1, 0},
+{2, 0, 0},
+{3, 0, 2},
+{2, 1, 1},
+{0, 0, 2}
+};
+
+isSafe(processes, avail, max, allot);
+
+return 0;
+}
+
+
+
